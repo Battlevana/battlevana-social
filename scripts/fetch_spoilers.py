@@ -73,7 +73,7 @@ for c in cards:
 combos = {}
 prev_combos = json.load(open(PREV / "combos.json")) if (PREV / "combos.json").exists() else {}
 for rec in out:
-    if (today - datetime.date.fromisoformat(rec["first_seen"])).days > COMBO_DAYS or rec["reprint"]: continue
+    if (today - datetime.date.fromisoformat(rec["first_seen"])).days > COMBO_DAYS or rec["reprint"] or "Token" in (rec["type"] or "") or rec["layout"] in ("token", "double_faced_token", "art_series", "emblem"): continue
     name = rec["n"].split(" // ")[0]
     q = "https://backend.commanderspellbook.com/variants/?" + urllib.parse.urlencode({"format": "json", "q": f'card:"{name}"', "limit": 20})
     try:

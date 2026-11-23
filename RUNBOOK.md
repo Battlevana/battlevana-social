@@ -23,7 +23,7 @@ Owner and only reviewer: Tim Dirven. All times are **Europe/Brussels**.
 cd /home/claude 2>/dev/null || cd ~
 [ -d battlevana-social ] || git clone https://github.com/Battlevana/battlevana-social
 cd battlevana-social && git pull -q
-git fetch -q origin spoilers && rm -rf /tmp/spoilers && git worktree prune && git worktree add -f /tmp/spoilers origin/spoilers
+git fetch -q origin +spoilers:refs/remotes/origin/spoilers && rm -rf /tmp/spoilers && git worktree prune && git worktree add -f /tmp/spoilers origin/spoilers -q
 python3 -c "import playwright" 2>/dev/null || pip install -q playwright --break-system-packages
 ls /usr/bin/google-chrome || python3 -m playwright install chromium   # then pass that executable in bvpost.render if needed
 ```
