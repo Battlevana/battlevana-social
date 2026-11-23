@@ -101,7 +101,7 @@ Read all `posts` (db_list) and handle each, oldest date first:
 a. **Changes requested** (`status: changes`): read the latest `changes` activity text and apply it. Rebuild from the stored `build` script (or the matching `kit/examples` script for older posts), re-upload,
    set `slides`/`story`/`caption`, `revision` +1, status `review`, clear `reminderSentAt`, activity `revised` with a one-line summary of what changed. Also read plain `comment` activities newer than the last revision and apply clear requests.
 
-b. **Reminder**: for every post with status `review` or `changes` whose post time is within the next 24 hours and has no `reminderSentAt`:
+b. **Reminder**: for every post with status `review` or `changes` whose post time is within the next 25 hours (so the 17:47 run catches next-day 18:00 posts) and has no `reminderSentAt`:
    send one email from the connected Gmail (tim@wearenova.be) to timdirven@gmail.com, plain text, no emojis.
    Subject: `BattleVana post waiting for approval: <title> (<weekday> <d month> <HH:MM>)`.
    Body: title, format, planned time, status, one line on what to check, the planner link, and: "If it is not approved before the planned time, it moves to the next free slot."
