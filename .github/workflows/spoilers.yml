@@ -1,0 +1,29 @@
+name: Fetch spoilers
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["requests/**", "scripts/fetch_spoilers.py", ".github/workflows/spoilers.yml"]
+permissions:
+  contents: write
+concurrency: spoilers
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Previous data
+        run: |
+          git fetch origin spoilers --depth=1 && git worktree add prev origin/spoilers || mkdir -p prev
+      - name: Fetch Scryfall + Commander Spellbook
+        run: python3 scripts/fetch_spoilers.py
+      - name: Publish to spoilers branch (single commit, no history growth)
+        run: |
+          cd out
+          git init -q -b spoilers
+          git config user.name "battlevana-bot"; git config user.email "bot@battlevana.be"
+          printf "Spoiler data for the BattleVana Instagram runs. Rebuilt every 3 hours by .github/workflows/spoilers.yml on main.\nCard data and images: Scryfall (scryfall.com) / Wizards of the Coast. Combos: Commander Spellbook.\n" > README.md
+          git add -A && git commit -qm "Spoiler data $(date -u +%FT%TZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" spoilers

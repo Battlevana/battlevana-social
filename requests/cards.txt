@@ -1,0 +1,5 @@
+# One exact English card name per line, optionally "Name | setcode".
+# Pushing a change here makes the GitHub Action fetch the card from Scryfall into the spoilers branch (extra/).
+Platinum Angel
+Proposal
+Shahrazad
