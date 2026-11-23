@@ -36,6 +36,9 @@ ls /usr/bin/google-chrome || python3 -m playwright install chromium   # then pas
 - The rules docs also live in the claude.ai Project "BattleVana" (`claude/battlevana-instagram-spoiler-rules.md`,
   `claude/battlevana-instagram-content-formats.md`, `claude/battlevana-post-planner.md`). Read them with the Projects tool when it is available.
 
+**Run log (every task, at the very end):** write one planner doc `runs/<task>-<UTC timestamp>` (task = spoiler-build | btc-build | planner-check | publish)
+with `task`, `at`, `summary` (the run log text, max ~1500 chars) and `ok` (true/false). If the claude-artifacts tools are not available in the session, say so clearly in the final response.
+
 ## 2. The kit (`kit/`)
 
 - `kit/bvpost.py` – shared CSS and slide builders: `cover`, `hero`, `grid2` (roundup, 2–9 cards, adaptive), `cta` (outro), `page`, `top`, `render`.
@@ -62,7 +65,7 @@ ls /usr/bin/google-chrome || python3 -m playwright install chromium   # then pas
 - Every write to an existing doc needs `ifVersion` from a fresh read (db_get/db_list). One db_write at a time.
 - If db_write is refused with `public_audience`, the planner was made public: stop writing and tell Tim in the run log (and in the reminder email if one is due).
 
-## 4. Task: spoiler + combo build (Sun, Tue, Thu ~17:40)
+## 4. Task: spoiler + combo build (Sun, Tue, Thu ~17:41)
 
 Goal: a post in review for the next posting slot, ~24 hours ahead, so Tim has a day to approve.
 
@@ -91,7 +94,7 @@ Goal: a post in review for the next posting slot, ~24 hours ahead, so Tim has a 
 5. Caption: `BEHIND THE CARD – <card>`, the story in 3–5 short paragraphs, a question, the Emjati line, image credit, max 5 hashtags (#MTG #MagicTheGathering #BehindTheCard #MTGHistory + 1).
 6. Upload, create the planner post (status review), activity `created`.
 
-## 6. Task: planner check (daily ~08:50 and ~16:50)
+## 6. Task: planner check (daily ~08:52, ~13:52 and ~17:47)
 
 Read all `posts` (db_list) and handle each, oldest date first:
 
