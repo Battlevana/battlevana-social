@@ -28,7 +28,8 @@ def fact(text):
 
 cover = page(glow_bg() + head() +
     '<div style="position:absolute;right:-30px;top:250px;width:600px;height:900px;border-radius:50%;background:radial-gradient(closest-side, rgba(241,70,36,.35), rgba(241,70,36,0))"></div>'
-    '<img src="vana/vana_thinking.png" style="position:absolute;right:-90px;bottom:30px;height:1040px;filter:drop-shadow(0 30px 50px rgba(0,0,0,.55))">'
+    f'<div style="position:absolute;right:64px;bottom:150px;width:560px;height:409px;border-radius:22px;overflow:hidden;border:3px solid rgba(246,246,246,.3);box-shadow:0 30px 60px rgba(0,0,0,.55)"><img src="{DIR}/salinae_art.jpg" style="width:100%;height:100%;object-fit:cover"></div>'
+    f'<div style="position:absolute;right:64px;bottom:100px;width:560px;font-size:20px;opacity:.7;text-align:right">Art: Salinae, the Ocean Mother (Svetlin Velinov)</div>'
     '<div style="position:absolute;left:64px;top:300px;width:520px">'
     '<div class="hook" style="font-size:30px;font-weight:700;letter-spacing:3px;opacity:.8;margin:0">MEET THE NEW</div>'
     '<div class="name" style="font-size:96px;line-height:1.05;margin-top:12px">EVASION</div>'
@@ -50,12 +51,12 @@ how = page(glow_bg() + head() +
     f'<img src="{ICON}" style="position:absolute;left:64px;bottom:56px;width:130px">')
 
 know = page(glow_bg() + head("GOOD TO KNOW") +
-    '<img src="vana/vana_smile.png" style="position:absolute;right:-60px;bottom:0;height:560px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5))">'
+    f'<div style="position:absolute;right:64px;bottom:150px;width:420px;height:430px;border-radius:22px;overflow:hidden;border:3px solid rgba(246,246,246,.3);box-shadow:0 30px 60px rgba(0,0,0,.55)"><img src="{DIR}/salinae_art.jpg" style="width:100%;height:100%;object-fit:cover"></div>'
+    f'<div style="position:absolute;right:64px;bottom:100px;width:420px;font-size:20px;opacity:.7;text-align:right">Art: Salinae, the Ocean Mother (Svetlin Velinov)</div>'
     '<div style="position:absolute;left:64px;right:64px;top:230px">'
     '<div class="name" style="font-size:88px;line-height:1">GOOD TO KNOW</div>'
     '<div style="display:flex;flex-direction:column;gap:34px;margin-top:54px;max-width:900px">'
     + fact("No new cards with flying in Nauctis. The last set without flying was Portal Three Kingdoms (1999).")
-    + fact("Flying is not gone from Magic. Your older flyers stay playable.")
     + fact("No cards with Dive have been previewed yet. We post them as soon as they are.")
     + '</div>'
     '<div style="margin-top:60px;max-width:560px">'
