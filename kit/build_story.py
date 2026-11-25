@@ -6,8 +6,8 @@ from playwright.sync_api import sync_playwright
 
 cover, fmt, theme, out = sys.argv[1:5]
 B = pathlib.Path(__file__).resolve().parent
-ACC = {"dark": {"spoiler": "#F24624", "btc": "#8FFE07", "combo": "#C9A127"},
-       "light": {"spoiler": "#F24624", "btc": "#2372C8", "combo": "#C9A127"}}[theme][fmt]
+ACC = {"dark": {"spoiler": "#F24624", "btc": "#8FFE07", "combo": "#C9A127", "special": "#F24624"},
+       "light": {"spoiler": "#F24624", "btc": "#2372C8", "combo": "#C9A127", "special": "#F24624"}}[theme][fmt]
 label_ink = "#001B2E" if ACC in ("#8FFE07", "#C9A127") else "#FFFFFF"
 bg, ink = ("#001B2E", "#F6F6F6") if theme == "dark" else ("#F3F1E8", "#001B2E")
 veil = "rgba(0,27,46,.55)" if theme == "dark" else "rgba(243,241,232,.7)"

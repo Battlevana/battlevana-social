@@ -129,8 +129,8 @@ def grid2(slugs, label, idx, total, sub=""):
             f'<div class="bottom" style="align-items:center;justify-content:flex-end">{LOGO}</div>')
     return page(body, bg=f"{DIR}/{slugs[0]}_art.jpg")
 
-ACCENTS = {"dark": {"spoiler": "#F24624", "btc": "#8FFE07", "combo": "#C9A127"},
-           "light": {"spoiler": "#F24624", "btc": "#2372C8", "combo": "#C9A127"}}
+ACCENTS = {"dark": {"spoiler": "#F24624", "btc": "#8FFE07", "combo": "#C9A127", "special": "#F24624"},
+           "light": {"spoiler": "#F24624", "btc": "#2372C8", "combo": "#C9A127", "special": "#F24624"}}
 DARK_TEXT_ON = {"#8FFE07", "#C9A127"}  # bright accents get Oxford Blue label text
 # light theme: small text in gold is too faint on cream (2.2:1), so text uses a darker gold (4.6:1)
 LIGHT_TEXT = {"#C9A127": "#86680F"}

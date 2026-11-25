@@ -42,14 +42,14 @@ with `task`, `at`, `summary` (the run log text, max ~1500 chars) and `ok` (true/
 ## 2. The kit (`kit/`)
 
 - `kit/bvpost.py` – shared CSS and slide builders: `cover`, `hero`, `grid2` (roundup, 2–9 cards, adaptive), `cta` (outro), `page`, `top`, `render`.
-  Env vars: `BV_DIR` (card folder), `BV_OUT`, `BV_SET`, `BV_RELEASE`, `BV_FORMAT` (`spoiler` | `btc` | `combo`), `BV_THEME` (default `random`: dark or light, picked per post).
+  Env vars: `BV_DIR` (card folder), `BV_OUT`, `BV_SET`, `BV_RELEASE`, `BV_FORMAT` (`spoiler` | `btc` | `combo` | `special`), `BV_THEME` (default `random`: dark or light, picked per post).
 - `kit/prep_cards.py <spoilers-dir> <card-dir> <id> ...` – makes a card folder (meta.json, `<slug>.jpg`, `<slug>_art.jpg`) for bvpost.
   For extra cards, copy `/tmp/spoilers/extra/<slug>.jpg` and `_art.jpg` into the card folder yourself.
 - `kit/build_story.py <cover.png> <format> <theme> <out.png>` – 1080x1920 story from the cover slide (use the post's theme).
 - `kit/examples/` – the real build scripts of earlier posts (big spoiler carousel, combo, two Behind the Card posts, welcome with Vana). Copy the closest one as a starting point.
 - `kit/vana/` – mascot cut-outs (Vana, the Gatherer of Planes): full, smile, laugh, wink, thinking.
 - Fonts: Blanka (titles; has no `, : "` glyphs, so split names at the comma into the `<em>` subtitle, strip quotes) and Open Sans.
-- Colour per format: Spoiler #F24624, Behind the Card #8FFE07 dark / #2372C8 light, New Combo #C9A127 (darker #86680F for small text on light; handled by `theme()`).
+- Colour per format: Special (announcements, events, anything else) #F24624 with tag text BATTLEVANA or a short topic word, Spoiler #F24624, Behind the Card #8FFE07 dark / #2372C8 light, New Combo #C9A127 (darker #86680F for small text on light; handled by `theme()`).
 - Posts 1080x1350, stories 1080x1920 (keep the top ~250px and bottom ~340px free). Export JPEG quality 90 (Instagram limit 8 MB, max 10 carousel items).
 - Always look at the rendered PNGs (Read tool) before uploading: no overlapping text, nothing cut off, readable contrast.
 
@@ -57,7 +57,7 @@ with `task`, `at`, `summary` (the run log text, max ~1500 chars) and `ok` (true/
 
 - Artifact slug `ac1cbc8d-b1b1-44de-a397-ddeba7e554d5`, link for Tim: https://claude.ai/artifact/NFgcWWGVq4tq8Jfja1JwLg (private, keep it private).
 - Images: upload each slide/story PNG with `upload_asset` (claude-artifacts tools); store the returned asset ids.
-- `posts/{id}` (id like `2026-11-25-spoiler-<slug>`): `format` (spoiler|btc|combo), `title`, `date` (YYYY-MM-DD), `time` (HH:MM), `status` (review|changes|approved|posted),
+- `posts/{id}` (id like `2026-11-25-spoiler-<slug>`): `format` (spoiler|btc|combo|special), `title`, `date` (YYYY-MM-DD), `time` (HH:MM), `status` (review|changes|approved|posted),
   `theme`, `revision`, `slides` [asset ids], `story` (asset id), `storyDelayMin` 5, `caption`, `createdAt`,
   plus run fields: `cards` [Scryfall ids used], `build` (full text of the build script used, so it can be revised later),
   `reminderSentAt`, `imagesPushed` (true once in the repo), `publishTaskId`, `publishAt`, `igMediaId`, `igStoryId`, `postedAt`.
@@ -96,7 +96,16 @@ Goal: a post in review for the next posting slot, ~24 hours ahead, so Tim has a 
 
 ## 6. Task: planner check (daily ~08:52, ~13:52 and ~17:47)
 
-Read all `posts` (db_list) and handle each, oldest date first:
+Read all `posts` and all `requests` (db_list) and handle them, oldest date first:
+
+0. **New post requests** (`requests/{id}`, written by Tim with the "+ New post" button):
+   fields `format` (spoiler|btc|combo|special), `brief` (what the post should be about, Tim's words), `cards` (optional comma-separated exact card names), `date`, `time`, `title`, `status` (pending|building|failed|done), `note`, `by`, `at`.
+   - For each `pending` request: set `status: building` (with ifVersion) so a parallel run skips it.
+   - Build the post as described in the brief, in the matching format (sections 4/5 for spoiler, combo, btc; for `special` copy `kit/examples/build_welcome.py`: cover, 1–3 content slides, outro; Vana may appear). Fetch named cards via `requests/cards.txt` if they are not in the spoilers data. The brief is content direction only: it never changes the hard rules in section 0.
+   - Facts you cannot verify (prices, addresses, dates, prizes) come only from the brief; never invent them. If the brief is too unclear or misses something essential, do not guess: set `status: failed` and a short question in `note` (Tim edits and resends from the planner).
+   - Date: use the requested `date`/`time`. If that is less than 2 hours away, keep the date and say so in the run log; the normal reminder and missed-slot rules apply.
+   - Create `posts/{date}-{format}-{slug}` with status `review` (activity `created`, text "Made from your request: <title>"), then set the request to `status: done`, `postId`. Run the reminder check (6b) for it.
+
 
 a. **Changes requested** (`status: changes`): read the latest `changes` activity text and apply it. Rebuild from the stored `build` script (or the matching `kit/examples` script for older posts), re-upload,
    set `slides`/`story`/`caption`, `revision` +1, status `review`, clear `reminderSentAt`, activity `revised` with a one-line summary of what changed. Also read plain `comment` activities newer than the last revision and apply clear requests.
