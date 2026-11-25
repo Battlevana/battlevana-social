@@ -123,13 +123,14 @@ d. **Approved**:
    - If not `imagesPushed`: download the slide and story assets, convert to JPEG q90, save as `<post-id>/01.jpg … NN.jpg` and `<post-id>/story.jpg` in this repo, commit ("Approved: <title>") and push. Set `imagesPushed: true`.
    - If the planned time is in the future and (`publishTaskId` is empty or `publishAt` differs from the planned time): create a one-shot scheduled task at the planned time (`run_once_at` in Europe/Brussels) named `Publish: <title>`
      whose prompt is: `Publish BattleVana planner post <post-id>. Follow RUNBOOK.md section 7 in the Battlevana/battlevana-social repo.` Store `publishTaskId` and `publishAt`. If an older publish task exists for a different time, delete it.
-   - If the planned time passed less than 3 hours ago and it is not posted: publish now (section 7). If it passed longer ago: move it to the next free slot as in 6c (keep it approved) and schedule it.
+   - If the planned time passed less than 3 hours ago and it is not posted (and no `publishingAt` lock younger than 30 minutes): publish now (section 7). If it passed longer ago: move it to the next free slot as in 6c (keep it approved) and schedule it.
 
 e. Finish with a short run log in the final response (what changed, what was sent, anything that failed).
 
 ## 7. Task: publish one post (one-shot task at the planned time)
 
 1. Read `posts/<post-id>`. Stop (log only) unless: status is `approved`, it is not posted, and `date`+`time` is within 15 minutes of now. (If it was rescheduled, a new task exists.)
+   **Publishing lock:** before any Windsor call, write `publishingAt: <now ISO>` with the `ifVersion` you just read. If that write is refused (the doc changed) re-read; if `publishingAt` is set and less than 30 minutes old, or `igMediaId` is set, stop: another run is publishing or has published it. Never call `create_carousel_post`/`create_image_post` without holding the lock.
 2. Make sure the images are in the repo (`imagesPushed`); if not, push them (6d) and wait 2 minutes for GitHub Pages.
    URLs: `https://battlevana.github.io/battlevana-social/<post-id>/NN.jpg` and `/story.jpg`.
 3. Windsor.ai (connector `instagram`, account `17841480859155974`):
@@ -139,3 +140,20 @@ e. Finish with a short run log in the final response (what changed, what was sen
 4. Set status `posted`, `igMediaId`, `postedAt`; activity `posted`.
 5. Wait `storyDelayMin` (5) minutes, then `create_story` with the story URL; on a timeout retry once. Save `igStoryId`; activity `posted` ("Story published").
 6. On any other failure: activity `error` with the message, and email Tim (same sender/recipient as reminders) with subject `BattleVana post failed to publish: <title>`. Do not retry more than once.
+
+## 8. Task: run now (fired from the planner page)
+
+Tim's planner page fires the scheduled task "BattleVana: run now (from planner)" with one line of text.
+
+**`build-request <request-id>`** ("Create now" button on a request):
+1. Read `requests/<request-id>`. It must exist and have status `pending` or `building` with `now: true` (the page sets `now: true`, `nowAt`). Otherwise log and stop.
+2. Take it: set `status: building` with ifVersion (refused → re-read; if another run already set building more than 1 minute ago without `now`, continue only if its `buildingAt` is older than 30 minutes). Set `buildingAt`.
+3. Build exactly as section 6, step 0. Speed matters (Tim is waiting): one pass, keep it to the slides the brief needs, but still check the rendered images.
+4. Date: if the request's date/time is in the past or less than 30 minutes away, set the post's `date`/`time` to now + 30 minutes (rounded to 5 minutes, Brussels time) and say so in the activity text.
+5. Create the post with status `review` (never `approved`), activity `created` ("Made now from your request: <title>"), request `status: done`, `postId`. Tim approves it in the planner; nothing is published by this action.
+
+**`publish-post <post-id>`** ("Approve and post now" button on a post):
+1. Read `posts/<post-id>`. Continue only if status is `approved`, `postNow` is true, `statusBy` is set and not "claude", and `statusAt` is less than 2 hours old. Otherwise log and stop.
+2. Push the images to the repo if needed (6d), wait until `https://battlevana.github.io/battlevana-social/<post-id>/01.jpg` is reachable through Windsor (just publish; on a media-download timeout wait 1 minute and retry once).
+3. Publish exactly as section 7 steps 1–6, using the lock. The 15-minute window in step 1 does not apply here (the page set date/time to now). Story 5 minutes later.
+4. If a one-shot publish task exists for this post (`publishTaskId`), delete it after publishing.
