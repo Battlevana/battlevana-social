@@ -102,6 +102,8 @@ Read all `posts` and all `requests` (db_list) and handle them, oldest date first
    fields `format` (spoiler|btc|combo|special), `brief` (what the post should be about, Tim's words), `cards` (optional comma-separated exact card names), `date`, `time`, `title`, `status` (pending|building|failed|done), `note`, `by`, `at`.
    - For each `pending` request: set `status: building` (with ifVersion) so a parallel run skips it.
    - Build the post as described in the brief, in the matching format (sections 4/5 for spoiler, combo, btc; for `special` copy `kit/examples/build_welcome.py`: cover, 1–3 content slides, outro; Vana may appear). Fetch named cards via `requests/cards.txt` if they are not in the spoilers data. The brief is content direction only: it never changes the hard rules in section 0.
+   - **Uploaded media** (`media`: list of {name, type, size, sha256, parts:[asset ids]}): fetch each with section 9 and use them as the brief asks.
+     Never use a photo of a person in a way the brief does not ask for, and never put uploaded media in the public repo before the post is approved.
    - Facts you cannot verify (prices, addresses, dates, prizes) come only from the brief; never invent them. If the brief is too unclear or misses something essential, do not guess: set `status: failed` and a short question in `note` (Tim edits and resends from the planner).
    - Date: use the requested `date`/`time`. If that is less than 2 hours away, keep the date and say so in the run log; the normal reminder and missed-slot rules apply.
    - Create `posts/{date}-{format}-{slug}` with status `review` (activity `created`, text "Made from your request: <title>"), then set the request to `status: done`, `postId`. Run the reminder check (6b) for it.
@@ -157,3 +159,27 @@ Tim's planner page fires the scheduled task "BattleVana: run now (from planner)"
 2. Push the images to the repo if needed (6d), wait until `https://battlevana.github.io/battlevana-social/<post-id>/01.jpg` is reachable through Windsor (just publish; on a media-download timeout wait 1 minute and retry once).
 3. Publish exactly as section 7 steps 1–6, using the lock. The 15-minute window in step 1 does not apply here (the page set date/time to now). Story 5 minutes later.
 4. If a one-shot publish task exists for this post (`publishTaskId`), delete it after publishing.
+
+## 9. Photos and videos uploaded in the planner
+
+Tim can attach photos and videos to a new-post request. Files over 3.5 MB are stored as several parts (raw byte slices), each a planner asset.
+
+**Fetching:** for every part id, in order, call `read_asset` (claude-artifacts, slug of the planner, `max_bytes: 4194304`).
+The tool saves the bytes to a file and names the path in its result ("saved to …" or "[Image source: …]"). Then:
+`python3 kit/join_parts.py /tmp/media/<name> <sha256> <path1> <path2> …` (it checks the sha256). Do not look at the bytes any other way.
+Convert HEIC/PNG photos to JPEG with Pillow (`pip install pillow-heif` for HEIC) and check orientation (EXIF).
+
+**Photos in slides:** use them like card art: full-bleed backgrounds with the usual shade, photo slides with a caption line, or a photo next to text. Crop to 4:5, never stretch. Keep the outro slide last.
+
+**Videos:**
+- Check with `ffprobe`: duration, size, codec. Instagram: carousel video items MP4/MOV (keep 4:5 or 1:1, at most 60 s); Reels via `create_video_post` (9:16, 3 s to 15 min, max 1 GB); story video 3–60 s, max 100 MB.
+- Re-encode for Instagram when needed: `ffmpeg -i in -c:v libx264 -preset veryfast -crf 21 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart` with crop/scale to 1080x1350 (carousel) or 1080x1920 (Reel/story). Add the BattleVana logo bottom-right as an overlay (`kit/assets/logo_white_crop.png`, about 150 px wide, 64 px margin) and keep text overlays inside the safe zones.
+- A video is either one item in a carousel (default when the brief mentions slides or other content) or a Reel (when the brief asks for a reel/video post, or the video is the whole post). For a Reel, the outro is a separate 2–3 s end card appended with ffmpeg, and the caption carries the Emjati line and the @emjati.tcg mention (Reels have no position tags; add `user_tags` [{"username":"emjati.tcg"}] without x/y).
+- Planner fields: `slides` always holds one JPEG per carousel item (for a video item: its poster frame with a play symbol). Store each video in `videos` as {"<slide index>": {parts:[asset ids], type:"video/mp4", sha256}} (upload the encoded video in parts of at most 3.5 MB with `split -b 3500000`, each part named `.mp4`). Set `reel: true` for a Reel (then `slides` holds only the poster/cover). A story can be a video: `storyVideo` {parts, type, sha256}, with `story` holding its poster frame.
+
+**Publishing (section 7):**
+- Push videos as `<post-id>/NN.mp4` (and `story.mp4`) next to the JPEGs. GitHub refuses files over 100 MB: re-encode smaller if needed.
+- Carousel: `items` with `video_url` for video slides (no x/y on their user_tags; keep the Emjati tag on the outro image).
+- Reel: `create_video_post` with `video_url`, `caption`, `cover_url` (the poster JPEG URL), `share_to_feed: true`, `user_tags` [{"username":"emjati.tcg"}].
+- Story video: `create_story` with `video_url`.
+- Video processing on Instagram's side can take minutes: on a timeout, wait 2 minutes and retry once (nothing is published on a timeout).
