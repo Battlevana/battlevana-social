@@ -122,7 +122,7 @@ c. **Missed slot**: a post that is still `review`/`changes` after its planned ti
    Update `date`/`time`, clear `reminderSentAt`, add activity `rescheduled` with from/to. Spoiler posts older than 7 days: also add a comment activity suggesting a refresh with newer cards.
 
 d. **Approved**:
-   - If not `imagesPushed`: download the slide and story assets, convert to JPEG q90, save as `<post-id>/01.jpg … NN.jpg` and `<post-id>/story.jpg` in this repo, commit ("Approved: <title>") and push. Set `imagesPushed: true`.
+   - If not `imagesPushed`: download the slide and story assets (read_asset saves each to a file, see section 9; videos via their parts and kit/join_parts.py), convert images to JPEG q90, save as `<post-id>/01.jpg … NN.jpg` and `<post-id>/story.jpg` in this repo, commit ("Approved: <title>") and push. Set `imagesPushed: true`.
    - If the planned time is in the future and (`publishTaskId` is empty or `publishAt` differs from the planned time): create a one-shot scheduled task at the planned time (`run_once_at` in Europe/Brussels) named `Publish: <title>`
      whose prompt is: `Publish BattleVana planner post <post-id>. Follow RUNBOOK.md section 7 in the Battlevana/battlevana-social repo.` Store `publishTaskId` and `publishAt`. If an older publish task exists for a different time, delete it.
    - If the planned time passed less than 3 hours ago and it is not posted (and no `publishingAt` lock younger than 30 minutes): publish now (section 7). If it passed longer ago: move it to the next free slot as in 6c (keep it approved) and schedule it.
