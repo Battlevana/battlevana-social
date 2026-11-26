@@ -123,8 +123,7 @@ c. **Missed slot**: a post that is still `review`/`changes` after its planned ti
 
 d. **Approved**:
    - If not `imagesPushed`: download the slide and story assets (read_asset saves each to a file, see section 9; videos via their parts and kit/join_parts.py), convert images to JPEG q90, save as `<post-id>/01.jpg … NN.jpg` and `<post-id>/story.jpg` in this repo, commit ("Approved: <title>") and push. Set `imagesPushed: true`.
-   - If the planned time is in the future and (`publishTaskId` is empty or `publishAt` differs from the planned time): create a one-shot scheduled task at the planned time (`run_once_at` in Europe/Brussels) named `Publish: <title>`
-     whose prompt is: `Publish BattleVana planner post <post-id>. Follow RUNBOOK.md section 7 in the Battlevana/battlevana-social repo.` Store `publishTaskId` and `publishAt`. If an older publish task exists for a different time, delete it.
+   - Do NOT create scheduled tasks (unattended runs cannot). The recurring task "BattleVana: publisher" (18:00 and 19:00 Brussels) publishes approved posts, see section 7b. `publishTaskId`/`publishAt` are no longer used.
    - If the planned time passed less than 3 hours ago and it is not posted (and no `publishingAt` lock younger than 30 minutes): publish now (section 7). If it passed longer ago: move it to the next free slot as in 6c (keep it approved) and schedule it.
 
 e. Finish with a short run log in the final response (what changed, what was sent, anything that failed).
@@ -142,6 +141,12 @@ e. Finish with a short run log in the final response (what changed, what was sen
 4. Set status `posted`, `igMediaId`, `postedAt`; activity `posted`.
 5. Wait `storyDelayMin` (5) minutes, then `create_story` with the story URL; on a timeout retry once. Save `igStoryId`; activity `posted` ("Story published").
 6. On any other failure: activity `error` with the message, and email Tim (same sender/recipient as reminders) with subject `BattleVana post failed to publish: <title>`. Do not retry more than once.
+
+## 7b. Task: publisher (recurring, 18:00 and 19:00 Brussels)
+
+Read all `posts`. For every post with status `approved`, not `posted`, no `igMediaId`, whose `date`+`time` is within the next 15 minutes or passed less than 3 hours ago:
+publish it one at a time following section 7 (lock first, images pushed, Windsor post, story after `storyDelayMin`). The 15-minute rule of section 7 step 1 is replaced by this window.
+Posts older than 3 hours stay for the planner check (6c/6d). If nothing is due, write the run log and stop.
 
 ## 8. Task: run now (fired from the planner page)
 
